@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="论文,RDMA," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="RDMA(Remote Direct Memory Access)：远程直接内存访问，为了解决网络传输中服务器端数据处理的延迟而产生的。它将数据直接从一台计算机的内存传输到另一台计算机，无需双方操作系统的介入，这允许高吞吐、低延迟的网络通信，尤其适合在大规模并行计算机集群中使用。RDMA通过网络把资料直接传入计算机的存储区，将数据从一个系统快速移动到远程系统存储器中，而不对操作系统造成任何影响，这">
+<meta property="og:type" content="article">
+<meta property="og:title" content="论文Using RDMA Efficiently for Key-Value Services Sigcomm&#39;14">
+<meta property="og:url" content="http://yoursite.com/2020/04/06/%E8%AE%BA%E6%96%87Using-RDMA-Efficiently-for-Key-Value-Services-Sigcomm-14/index.html">
+<meta property="og:site_name" content="Tobey">
+<meta property="og:description" content="RDMA(Remote Direct Memory Access)：远程直接内存访问，为了解决网络传输中服务器端数据处理的延迟而产生的。它将数据直接从一台计算机的内存传输到另一台计算机，无需双方操作系统的介入，这允许高吞吐、低延迟的网络通信，尤其适合在大规模并行计算机集群中使用。RDMA通过网络把资料直接传入计算机的存储区，将数据从一个系统快速移动到远程系统存储器中，而不对操作系统造成任何影响，这">
+<meta property="article:published_time" content="2020-04-06T08:56:15.000Z">
+<meta property="article:modified_time" content="2020-04-06T08:57:46.198Z">
+<meta property="article:author" content="Tobey">
+<meta property="article:tag" content="论文">
+<meta property="article:tag" content="RDMA">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"right","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/04/06/论文Using-RDMA-Efficiently-for-Key-Value-Services-Sigcomm-14/"/>
+
+
+
+
+
+  <title>论文Using RDMA Efficiently for Key-Value Services Sigcomm'14 | Tobey</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tobey</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/06/%E8%AE%BA%E6%96%87Using-RDMA-Efficiently-for-Key-Value-Services-Sigcomm-14/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Tobey">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tobey">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">论文Using RDMA Efficiently for Key-Value Services Sigcomm'14</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-06T16:56:15+08:00">
+                2020-04-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%BA%E6%96%87/" itemprop="url" rel="index">
+                    <span itemprop="name">论文</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>RDMA(Remote Direct Memory Access)：远程直接内存访问，为了解决网络传输中服务器端数据处理的延迟而产生的。它将数据直接从一台计算机的内存传输到另一台计算机，无需双方操作系统的介入，这允许高吞吐、低延迟的网络通信，尤其适合在大规模并行计算机集群中使用。RDMA通过网络把资料直接传入计算机的存储区，将数据从一个系统快速移动到远程系统存储器中，而不对操作系统造成任何影响，这样就不需要用到多少计算机的处理能力。它消除了外部存储器复制和上下文切换的开销，因而能解放内存带宽和 CPU周期用于改进应用系统性能。</p>
+<a id="more"></a>
+
+<p><strong>背景</strong></p>
+<ul>
+<li><p><em>传统TCP/IP通信模式</em>：数据通过用户空间发送到远程机器的用户空间。</p>
+<p>发送方将数据从用户空间Buffer复制到内核空间的Socket Buffer中；然后kernel空间中添加一系列网络协议的数据包头，进行数据封装；数据被PUSH到NIC网卡中的Buffer进行网络传输。</p>
+<p>接收方接收到远程机器发送的数据包后，将数据包从NIC buffer中复制数据到Socket Buffer；然后经过一系列的多层网络协议进行数据包的解析工作；解析后的数据被复制到相应位置的用户应用空间Buffer；再进行系统上下文切换，用户应用程序被调用。</p>
+</li>
+<li><p><em>通信网络定义</em>：计算机网络通信中最重要的两个衡量指标主要是高带宽和低延迟，通信延迟主要是指：处理延迟和网络传输延迟。处理延迟开销是消息在发送和接收阶段的处理时间，网络传输延迟是消息在发送和接收方的网络传输延迟。如果通信状况很好的情况下，网络基本上可以达到高带宽和低延迟。</p>
+</li>
+<li><p><em>当今网络现状</em>：现在的消息通信主要分为两类消息，一类是large messages，这类消息通信中网络传输延迟占整个通信中的主导地位；另一类是small messages，这类消息中处理开销占总开销的主要部分。现实计算机网络中的通信场景中，主要以发送小消息为主。处理开销主要指的是buffer管理、在不同内存空间中消息复制、消息发送完成后的系统中断。</p>
+</li>
+<li><p><em>传统TCP/IP存在的问题</em>：I/O瓶颈问题，即与网络I/O相关的主机处理的开销，包括数据移动操作和复制操作开销，主要是因为TCP/IP通过内核发送消息，数据移动和复制多，难以支持新的网络协议和新的消息通信协议以及发送和接收窗口。</p>
+</li>
+</ul>
+<p><strong>相关工作</strong></p>
+<p>TCP Offloading Engine、User-Net Networking、Virtual Interface Architecture(VIA)、Remote Direct Memory Access(RDMA)</p>
+<ul>
+<li><p>TCP Offloading Engine(TOE)：将封装多层网络协议的工作转移到网卡上，需要特定网络接口-网卡支持这种Offloading操作。常见于高速以太网接口上，如吉比特以太网(GbE)或10吉比特以太网(10GbE)。</p>
+</li>
+<li><p>User-Net Networking(U-Net)：将协议处理部分移动到用户空间处理，避免用户空间将数据移动和复制到内核空间的开销。移动整个协议栈到用户空间中，并从数据通信路径中彻底删除内核，带来了高性能的提升和高灵活性的提升。传统网络内核控制整个网络通信，U-Net应用程序通过MUX直接访问网络，而不需要将数据拷贝到内核中。</p>
+</li>
+</ul>
+<p><strong>RDMA详解</strong></p>
+<p>RDMA的三个特性：低延迟、低CPU开销、高带宽</p>
+<p>在用户空间虚拟内存与RNIC网卡直接进行数据传输不涉及到系统内核，没有额外的数据移动和复制。</p>
+<ul>
+<li><p><em>RDMA基本概念</em></p>
+<p><strong><em>两种基本操作</em></strong>：</p>
+<p>1.Memory verbs：RDMA read、write、atomic，这些操作指定远程地址进行操作并且绕过接收者的CPU。</p>
+<p>2.Messaging vers：包括RDMA send、receive，这些动作设计响应者的CPU，发送的数据被写入到由响应者的CPU先前发布的receive指定的地址。</p>
+<p><strong><em>RDMA传输</em></strong>分为可靠的和不可靠的，可连接的和不连接的，无连接的数据报不支持memory verbs。</p>
+</li>
+<li><p>RDMA三种不同的硬件实现</p>
+<ul>
+<li><p>Infiniband：支持RDMA的新一代网络协议，专为RDMA设计的网络，从硬件级别保证可靠传输，需要支持该技术的NIC和交换机。</p>
+</li>
+<li><p>RoCE(RDMA over Converged Ethernet)：在以太网上执行RDMA的网络协议，较低的网络标头是以太网标头，较高的网络标头是InfiniBand标头，可在标准以太网基础设施(交换机)上使用RDMA，只有网卡是特殊的，支持RoCE。RoCEv1是基于以太网链路层实现的RDMA协议，而RoCEv2是以太网TCP/IP协议中UDP层实现。</p>
+</li>
+<li><p>iWARP(Internet Wide Area RDMA Protocol)：允许在TCP上执行RDMA的网络协议，IB和RoCE中存在IDE功能在iWARP中不受支持。支持标准以太网基础设施(交换机)上使用RDMA，只有网卡是特殊的，支持iWARP。</p>
+</li>
+</ul>
+</li>
+<li><p>RDMA工作过程</p>
+<ul>
+<li>当一个应用执行RDM读或写请求时，不执行任何数据复制，在不需要任何内核内存参与的条件下，RDMA请求从运行在用户空间中的应用中发送到本地NIC。</li>
+<li>NIC读取缓冲的内容，并通过网络传送到远程NIC。</li>
+<li>在网络中传输的RDMA信息包含目标虚拟地址、内存钥匙和数据不本身，请求可完全在用户空间中处理(通过轮询用户级完成排列)，或者在应用一直睡眠到请求完成时的情况下通过系统中断处理。操作使应用可以从一个远程应用的内存中读数据或向这个内存写数据。</li>
+<li>目标NIC确认内存钥匙，直接将数据写入应用缓存中，用于操作的远程虚拟内存地址包含在RDMA信息中。</li>
+</ul>
+</li>
+<li><p>RDMA操作细节</p>
+<ul>
+<li><p>RDMA通信的两端会各自维护Queue Pairs(QP)，每对QP由Send Queue(SQ)和Receive Queue(RQ)构成，队列中管理各种类型的消息。QP会被映射到应用的虚拟地址空间，使得应用直接通过它访问RNIC网卡。QP会绑定另外一个队列Complete Queue(CQ)，CQ用来告知用户WQ上的消息已经被处理完。</p>
+</li>
+<li><p>RDMA提供一套软件传输接口，方便用户创建传输请求Work Request(WR)，WR中描述了应用希望传输到对方的消息内容，WR通知QP中的某个队列Work Queue(WQ)，在WQ中用户的WR被转化成Work Queue Element(WQE)的格式，等待RNIC的一步调度解析，并从WQE指向的Buffer中拿到真正的消息发送给对方。</p>
+</li>
+<li><p>RDMA单边操作——RDMA READ</p>
+<p><strong><em>单边操作只需要本端明确信息的源和目的地址，远端能应用不必感知此次通信，数据的读写都通过RDMA在RNIC与应用Buffer之间完成，再由远端RNIC封装成消息返回到本端。</em></strong></p>
+<ul>
+<li>单边操作流程<ul>
+<li>A、B建立连接，QP创建并初始化。</li>
+<li>数据存在A的buffer地址VA（内存区域）中，注意VA应提前注册到A的RNIC，并拿到返回的local key，相当于RDMA操作这块buffer的权限。</li>
+<li>A把数据地址VA，key封装到专用的报文传送到B，这相当于A把数据buffer的操作权交给了B。同时A在它的WQ中注册进一个WR，以用于接收数据传输的B返回的状态。</li>
+<li>B在收到A送过来的数据VA和R_key后，RNIC会把它们连同自身存储地址VB封装到RDMA READ请求，将这个消息请求发送给A，这个过程A、B两端不需要任何软件参与，就可以将A的数据存储到B的VB虚拟地址。</li>
+<li>B在存储完成后，会向A返回整个数据传输的状态信息。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>RDMA单边操作——RDMA WRITE</p>
+<ul>
+<li><p>首先A、B建立连接，QP已经创建并且初始化。</p>
+</li>
+<li><p>数据remote目标存储buffer地址VB，注意VB应该提前注册到B的RNIC(并且它是一个Memory Region)，并拿到返回的local key，相当于RDMA操作这块buffer的权限。</p>
+</li>
+<li><p>B把数据地址VB，key封装到专用的报文传送到A，这相当于B把数据buffer的操作权交给了A。同时B在它的WQ中注册进一个WR，以用于接收数据传输的A返回的状态。</p>
+</li>
+<li><p>A在收到B送过来的数据VB和R_key后，RNIC会把它们连同自身发送地址VA封装到RDMA WRITE请求，这个过程A、B两端不需要任何软件参与，就可以将A的数据发送到B的VB虚拟地址。</p>
+</li>
+<li><p>A在发送数据完成后，会向B返回整个数据传输的状态信息。</p>
+<p><strong><em>单边操作传输方式是RDMA与传统网络传输的最大不同，只需提供直接访问远程的虚拟地址，无须远程应用的参与其中，这种方式适用于批量数据传输。</em></strong></p>
+</li>
+</ul>
+</li>
+<li><p>RDMA双边操作——RDMA SEND/RECEIVE</p>
+<p><strong><em>RDMA中SEND/RECEIVE是双边操作，即必须要远端的应用感知参与才能完成收发。在实际中，SEND/RECEIVE多用于连接控制类报文，而数据报文多是通过READ/WRITE来完成的。</em></strong><br>对于双边操作为例，主机A向主机B(下面简称A、B)发送数据的流程如下：</p>
+<ul>
+<li><p>首先，A和B都要创建并初始化好各自的QP，CQ</p>
+</li>
+<li><p>A和B分别向自己的WQ中注册WQE，对于A，WQ=SQ，WQE描述指向一个等到被发送的数据；对于B，WQ=RQ，WQE描述指向一块用于存储数据的buffer。</p>
+</li>
+<li><p>A的RNIC异步调度轮到A的WQE，解析到这是一个SEND消息，从buffer中直接向B发出数据。数据流到达B的RNIC后，B的WQE被消耗，并把数据直接存储到WQE指向的存储位置。</p>
+</li>
+<li><p>AB通信完成后，A的CQ中会产生一个完成消息CQE表示发送完成。与此同时，B的CQ中也会产生一个完成消息表示接收完成。每个WQ中WQE的处理完成都会产生一个CQE。</p>
+<p><strong><em>双边操作与传统网络的底层Buffer Pool类似，收发双方的参与过程并无差别，区别在零拷贝、Kernel Bypass，实际上对于RDMA，这是一种复杂的消息传输模式，多用于传输短的控制消息。</em></strong></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E8%AE%BA%E6%96%87/" rel="tag"># 论文</a>
+          
+            <a href="/tags/RDMA/" rel="tag"># RDMA</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/04/06/DPDK%E5%AE%89%E8%A3%85/" rel="next" title="DPDK安装">
+                <i class="fa fa-chevron-left"></i> DPDK安装
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/" rel="prev" title="论文Architecting to Achieve a Billion Requests Per second Throughput on a Single Key-Value Store Server Platform,ISCA'2015">
+                论文Architecting to Achieve a Billion Requests Per second Throughput on a Single Key-Value Store Server Platform,ISCA'2015 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/header.jpg"
+                alt="Tobey" />
+            
+              <p class="site-author-name" itemprop="name">Tobey</p>
+              <p class="site-description motion-element" itemprop="description">执行力是最好的老师！</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tobey</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

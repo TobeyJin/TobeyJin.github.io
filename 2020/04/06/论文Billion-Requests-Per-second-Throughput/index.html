@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="论文," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景 分布式键值存储例如memcached广泛用于数据中心，比如Facebook、Twitter、Amazon和LinkedIn等，提供数据服务或缓存服务。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="论文Architecting to Achieve a Billion Requests Per second Throughput on a Single Key-Value Store Server Platform,ISCA&#39;2015">
+<meta property="og:url" content="http://yoursite.com/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/index.html">
+<meta property="og:site_name" content="Tobey">
+<meta property="og:description" content="背景 分布式键值存储例如memcached广泛用于数据中心，比如Facebook、Twitter、Amazon和LinkedIn等，提供数据服务或缓存服务。">
+<meta property="og:image" content="http://yoursite.com/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/NIC.png">
+<meta property="og:image" content="http://yoursite.com/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/KVS%20design.png">
+<meta property="og:image" content="http://yoursite.com/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/experimental%20KVS.png">
+<meta property="og:image" content="http://yoursite.com/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/CoresAndPorts.png">
+<meta property="og:image" content="http://yoursite.com/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/%E5%B9%B3%E5%8F%B0%E6%9E%B6%E6%9E%84.png">
+<meta property="article:published_time" content="2020-04-06T08:58:34.000Z">
+<meta property="article:modified_time" content="2020-04-06T09:09:50.623Z">
+<meta property="article:author" content="Tobey">
+<meta property="article:tag" content="论文">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/NIC.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"right","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/04/06/论文Billion-Requests-Per-second-Throughput/"/>
+
+
+
+
+
+  <title>论文Architecting to Achieve a Billion Requests Per second Throughput on a Single Key-Value Store Server Platform,ISCA'2015 | Tobey</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tobey</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Tobey">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/header.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tobey">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">论文Architecting to Achieve a Billion Requests Per second Throughput on a Single Key-Value Store Server Platform,ISCA'2015</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-04-06T16:58:34+08:00">
+                2020-04-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AE%BA%E6%96%87/" itemprop="url" rel="index">
+                    <span itemprop="name">论文</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h5 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h5><ol>
+<li><p>分布式键值存储例如memcached广泛用于数据中心，比如Facebook、Twitter、Amazon和LinkedIn等，提供数据服务或缓存服务。</p>
+<a id="more"></a>
+</li>
+<li><p>传统的KVS瓶颈：使用操作系统内核网络协议栈、并发控制的重量级锁处理、昂贵的内存管理。</p>
+</li>
+<li><p>现有的研究：</p>
+<ol>
+<li>关注于硬件：基于FPGA的设计、其他非FPGA的建议</li>
+<li>关注于软件：优化网络处理、并发控制、k-v处理、内存管理，以充分利用商用CPU和网卡的性能，例如：MICA实现了77 million requests per second(MRPS)(7.7千万请求每秒)</li>
+</ol>
+</li>
+<li><p>关于KVS软件优化的几点思考：</p>
+<ol>
+<li>软件优化是否能充分利用现代硬件平台的性能；</li>
+<li>对于提高性能而言，哪些软件优化是必要的；</li>
+<li>对未来的平台架构有什么影响。</li>
+</ol>
+</li>
+</ol>
+<h5 id="现代平台和KVS设计空间"><a href="#现代平台和KVS设计空间" class="headerlink" title="现代平台和KVS设计空间"></a>现代平台和KVS设计空间</h5><ol>
+<li><p>现在的平台：</p>
+<ol>
+<li><p>CPU核数和末级缓存(LLC)大小不断提高</p>
+<p>eg：Intel Xeon(18 cores, 45MBs LLC)</p>
+</li>
+<li><p>网卡：延迟和带宽的提高、多队列、RSS(receive-size scaling)、flow-steering</p>
+</li>
+<li><p>处理器支持wauDCA(write-allocate-write-update-capable Direct Cache Access)：使传统或RDMA网卡能直接把数据包放到处理器LLC中，CPU无需从主存中拿数据包，从而控制缓存争用，如Intel DDIO(Intel Data Direct I/O)：</p>
+<p><img src="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/NIC.png" alt></p>
+</li>
+<li><p>操作系统网络协议栈——&gt;用户态网络I/O，如包处理I/O引擎PacketShader和DPDK</p>
+</li>
+</ol>
+</li>
+</ol>
+<ol start="2">
+<li><p>KVS设计</p>
+<ol>
+<li>memcached：原始的设计</li>
+<li>类memcached的KVS：MemC3、Pilaf、MICA、FaRM-KV、HERD，分别对KVS的不同部分进行了优化。</li>
+<li>KVS设计的四个维度<ol>
+<li>网络栈：POSIX socket I/O ——&gt; DPDK、RDMA drivers</li>
+<li>并发控制：互斥 ——&gt; 基于版本控制的乐观锁</li>
+<li>key-value处理：索引：链式哈希 ——&gt; 有损索引、cuckoo hashing、hopscotch hashing；替换策略：LRU列表 ——&gt; CLOCK、其他类LRU的策略</li>
+<li>内存管理：自定义内存管理(避免malloc的开销、使用大页内存减少TLB、促进替换策略的实施)，比SLAB、日志结构(循环日志)</li>
+</ol>
+</li>
+</ol>
+<img src="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/KVS design.png">
+
+
+
+</li>
+</ol>
+<h5 id="本论文实验-模拟"><a href="#本论文实验-模拟" class="headerlink" title="本论文实验(模拟)"></a>本论文实验(模拟)</h5><ol>
+<li><p>KVS实现</p>
+<img src="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/experimental KVS.png">
+</li>
+<li><p>工作负载：YCSB</p>
+<p>工作负载的几个方面：</p>
+<p>​    包大小：注意小数据包</p>
+<p>​    key的分布：uniform和skew(zipf:skewness=0.99)两种</p>
+<p>​    read-intensiveness：95%GET和50% GET</p>
+</li>
+<li><p>实验平台：</p>
+<p><u>数据收集和性能分析：</u></p>
+<p>​    Systemtap2.4：应用层、系统层、操作系统层分析</p>
+<p>​    Intel VTune：收集数据和硬件层性能分析</p>
+<p>​    Wats-Up-Pro：measure the total power supplied to the server from a wall socket </p>
+<p>​    National Instruments DAQ-9174：measure the power of the two processors and one of the PCIe NICs </p>
+</li>
+</ol>
+<h5 id="论文中KVS-server关注的几点内容-模拟结论"><a href="#论文中KVS-server关注的几点内容-模拟结论" class="headerlink" title="论文中KVS server关注的几点内容(模拟结论)"></a>论文中KVS server关注的几点内容(模拟结论)</h5><ol>
+<li><p>结构的平衡和系统优化：计算、存储和网络资源的平衡：</p>
+<p>CPU cores : 网络端口(万兆) = 2 ：1</p>
+<img src="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/CoresAndPorts.png" style="zoom:60">
+</li>
+<li><p>KV处理、并发控制、网络处理和内存管理多个方面需同时优化，单个方面优化并不能达到很好的效果。</p>
+</li>
+<li><p>预取降低缓存丢失率。</p>
+</li>
+<li><p>针对倾斜的工作负载，关注每核的行为。</p>
+</li>
+<li><p>满足延迟服务级别协议的同时，实现高吞吐量。</p>
+</li>
+<li><p>关于能耗的考虑，与FPGA做对比。</p>
+</li>
+</ol>
+<h5 id="十亿级RPS的KVS服务器实现-系统实现和评测"><a href="#十亿级RPS的KVS服务器实现-系统实现和评测" class="headerlink" title="十亿级RPS的KVS服务器实现(系统实现和评测)"></a>十亿级RPS的KVS服务器实现(系统实现和评测)</h5><ol>
+<li>平台架构</li>
+</ol>
+<img src="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/平台架构.png">
+
+<p>具体的硬件配置：计算、存储和网络之间的平衡</p>
+<p><strong>计算：</strong>涉及到ROB(reorder buffer)大小和issue width….最终选择带有64ROB的3-issue OOO core.</p>
+<p><strong>网络和I/O子系统：</strong>根据CPU核数确定网络带宽，根据网络带宽确定I/O带宽(PCIe)；片上集成网卡应用于KVS。</p>
+<p><strong>内存子系统和缓存层次结构：</strong> six memory controllers with single-channel DDR4-2400 for a total of 118 GB/s aggregated memory bandwidth </p>
+<ol start="2">
+<li>性能评测：(uniform data) 4-socket：1.2 billion RPS(BRPS)</li>
+</ol>
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>Full-stack insight：包括软件和硬件两方面的考虑和优化。</p>
+<p>优化结果不仅包括性能，还有系统的能耗。</p>
+<p>未来KVS设计的四个维度。</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/%E8%AE%BA%E6%96%87/" rel="tag"># 论文</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/04/06/%E8%AE%BA%E6%96%87Using-RDMA-Efficiently-for-Key-Value-Services-Sigcomm-14/" rel="next" title="论文Using RDMA Efficiently for Key-Value Services Sigcomm'14">
+                <i class="fa fa-chevron-left"></i> 论文Using RDMA Efficiently for Key-Value Services Sigcomm'14
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/header.jpg"
+                alt="Tobey" />
+            
+              <p class="site-author-name" itemprop="name">Tobey</p>
+              <p class="site-description motion-element" itemprop="description">执行力是最好的老师！</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/%7C%7Carchive">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#现代平台和KVS设计空间"><span class="nav-number">2.</span> <span class="nav-text">现代平台和KVS设计空间</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#本论文实验-模拟"><span class="nav-number">3.</span> <span class="nav-text">本论文实验(模拟)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#论文中KVS-server关注的几点内容-模拟结论"><span class="nav-number">4.</span> <span class="nav-text">论文中KVS server关注的几点内容(模拟结论)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#十亿级RPS的KVS服务器实现-系统实现和评测"><span class="nav-number">5.</span> <span class="nav-text">十亿级RPS的KVS服务器实现(系统实现和评测)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tobey</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

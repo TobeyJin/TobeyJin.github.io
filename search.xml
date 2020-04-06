@@ -1,0 +1,706 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>CentOS安装Python2.7.9</title>
+    <url>/2020/04/06/CentOS%E5%AE%89%E8%A3%85Python2-7-9/</url>
+    <content><![CDATA[<p>CentOS安装2.7.9版本的Python</p>
+<a id="more"></a>
+
+<p>1.准备<br>安装Development Tools</p>
+<pre><code>yum groupinstall -y &apos;development tools&apos;</code></pre><p>安装SSL、bz2、zlib</p>
+<pre><code>yum install -y zlib-devel bzip2-devel openssl-devel xz-libs wget</code></pre><p>2.安装<br>下载Python2.7.9</p>
+<pre><code>wget https://www.python.org/ftp/python/2.7.9/Python-2.7.9.tar.xz</code></pre><p>解压</p>
+<pre><code>tar -Jxvf Python-2.7.9.tar.xz -C /usr/src/</code></pre><p>安装</p>
+<pre><code>mkdir /usr/local/python2.7 
+cd /usr/src/Python-2.7.9/ 
+./configure --prefix=/usr/local/python2.7 &amp;&amp; make &amp;&amp; make install </code></pre><p>将系统Python指令默认指向Python2.7.9（注：CentOS6.5中yum需要Python2.6.6支持，所以不能卸载老版本的Python）</p>
+<pre><code>mv /usr/bin/python /usr/bin/python2.6.6 
+ln -s /usr/local/python27/bin/python2.7 /usr/bin/python 
+python --version </code></pre><p>解决yum与Python的兼容问题：在yum配置文件中，重新使yum指向Python2.6.6的执行程序。</p>
+<pre><code>vim /usr/bin/yum
+将原来的：
+#!/usr/bin/python
+改为：
+#!/usr/bin/python2.6.6</code></pre><p>其他不兼容Python2.7的软件都可以使用这个方法解决。</p>
+]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>Python</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>CentOS安装LLVM+clang3.8.0</title>
+    <url>/2020/04/06/CentOS%E5%AE%89%E8%A3%85LLVM-clang3-8-0/</url>
+    <content><![CDATA[<p>LLVM可以被看作是一系列的<strong>编译器和工具链技术的集合</strong>，而且它们是模块化并且是可重用的。Clang是一个C、C++、OC语言的轻量级编译器，由Apple公司开发。</p>
+<a id="more"></a>
+
+<p>1.安装要求<br>Python2.7<br>gcc4.8</p>
+<p>2安装libstdc++4.7</p>
+<pre><code>wget http://people.centos.org/tru/devtools-2/devtools-2.repo -O /etc/yum.repos.d/devtools-2.repo
+yum install devtoolset-2-gcc devtoolset-2-binutils devtoolset-2-gcc-c++
+ln -s /opt/rh/devtoolset-2/root/usr/bin/* /usr/local/bin/</code></pre><p>(这一步好像可以不做，刚刚升级到gcc5.4)</p>
+<p>3.安装<br>1）下载LLVM源码</p>
+<pre><code>wget http://llvm.org/releases/3.8.0/llvm-3.8.0.src.tar.xz
+tar xzf llvm-3.8.0.src.tar.xz
+mv llvm-3.8.0.src llvm</code></pre><p>2）下载clang源码</p>
+<pre><code>wget http://llvm.org/releases/3.8.0/cfe-3.8.0.src.tar.xz
+tar xzf cfe-3.8.0.src.tar.xz
+mv cfe-3.8.0.src llvm/tools/clang</code></pre><p>3）下载compiler-rt源码</p>
+<pre><code>wget http://llvm.org/releases/3.8.0/compiler-rt-3.8.0.src.tar.xz
+tar xzf compiler-rt-3.8.0.src.tar.xz
+mv compiler-rt-3.8.0.src llvm/projects/compiler-rt</code></pre><p>4）编译LLVM</p>
+<pre><code>mkdir llvm-build
+cd llvm-build
+../llvm/configure --enable-optimized --enable-targets=host-only
+make -j4
+make install</code></pre><p>5）检查clang版本</p>
+<pre><code>clang --version</code></pre>]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>LLVM</tag>
+        <tag>clang</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>DPDK安装</title>
+    <url>/2020/04/06/DPDK%E5%AE%89%E8%A3%85/</url>
+    <content><![CDATA[<p>CentOS下如何安装DPDK</p>
+<a id="more"></a>
+
+<h5 id="1-安装libpcap"><a href="#1-安装libpcap" class="headerlink" title="1.安装libpcap"></a>1.安装libpcap</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">yum install flex</span><br><span class="line">yum install bison</span><br><span class="line">yum install libpcap-devel</span><br></pre></td></tr></table></figure>
+<h5 id="2-下载DPDK"><a href="#2-下载DPDK" class="headerlink" title="2.下载DPDK"></a>2.下载DPDK</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">wget http:<span class="comment">//fast.dpdk.org/rel/dpdk-18.11.2.tar.xz</span></span><br></pre></td></tr></table></figure>
+<h5 id="3-解压DPDK并进入到解压缩目录"><a href="#3-解压DPDK并进入到解压缩目录" class="headerlink" title="3.解压DPDK并进入到解压缩目录"></a>3.解压DPDK并进入到解压缩目录</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">tar xf dpdk<span class="number">-18.11</span><span class="number">.2</span></span><br><span class="line">cd dpdk-stable<span class="number">-18.11</span><span class="number">.2</span>/</span><br></pre></td></tr></table></figure>
+
+<h5 id="4-配置并编译DPDK，配置为64位x86linux系统"><a href="#4-配置并编译DPDK，配置为64位x86linux系统" class="headerlink" title="4.配置并编译DPDK，配置为64位x86linux系统"></a>4.配置并编译DPDK，配置为64位x86linux系统</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">make <span class="built_in">config</span> T=x86_64-native-linuxapp-gcc</span><br><span class="line">sed -ri 's,(PMD_PCAP=).*,\1y,' build/.config</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
+
+<h5 id="5-预留大页内存"><a href="#5-预留大页内存" class="headerlink" title="5.预留大页内存"></a>5.预留大页内存</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p /mnt/huge</span><br><span class="line"> mount -t hugetlbfs nodev /mnt/huge</span><br><span class="line"> echo <span class="number">64</span> &gt; /sys/devices/system/node/node0/hugepages/hugepages<span class="number">-2048</span>kB/nr_hugepages</span><br></pre></td></tr></table></figure>
+
+<h5 id="6-查看网卡信息"><a href="#6-查看网卡信息" class="headerlink" title="6.查看网卡信息"></a>6.查看网卡信息</h5><figure class="highlight c"><table><tr><td class="code"><pre><span class="line">ifconfig</span><br></pre></td></tr></table></figure>
+
+<pre><code>选择一块不用于网络通信的网卡进行UIO绑定</code></pre><p>#####7.加载UIO模块并绑定网卡</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">ifconfig ens5f1 down<span class="comment">//关掉网卡</span></span><br><span class="line">modprobe uio</span><br><span class="line">insmod build/kmod/igb_uio.ko<span class="comment">//加载uio和igb_uio模块</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">python usertools/dpdk-devbind.py --bind=igb_uio ens5f1	<span class="comment">//绑定网卡ens5f1到igb_uio驱动上</span></span><br><span class="line">python tools/dpdk-devbind.py --status		<span class="comment">//查看状态</span></span><br></pre></td></tr></table></figure>
+
+<p>绑定成果显示如下：</p>
+<p>![屏幕快照 2019-07-31 13.46.11](/Users/xiaotong/Desktop/屏幕快照 2019-07-31 13.46.11.png)</p>
+<h5 id="8-每次运行DPDK时都需要分配大页和绑定网卡驱动，所以这里写一个shell脚本进行配置"><a href="#8-每次运行DPDK时都需要分配大页和绑定网卡驱动，所以这里写一个shell脚本进行配置" class="headerlink" title="8.每次运行DPDK时都需要分配大页和绑定网卡驱动，所以这里写一个shell脚本进行配置"></a>8.每次运行DPDK时都需要分配大页和绑定网卡驱动，所以这里写一个shell脚本进行配置</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">DEVICE="ens5f1"</span><br><span class="line">DRIVER="igb_uio"</span><br><span class="line"></span><br><span class="line">while getopts ":hd:r:" optname</span><br><span class="line">do</span><br><span class="line">  case "$optname" in</span><br><span class="line">    "h")</span><br><span class="line">      echo "   `basename $&#123;0&#125;`:usage:[-d device_name] [-r driver_name]"</span><br><span class="line">      echo "   where device_name can be one in: &#123;ens5f1&#125;,driver_name can be one in: &#123;igb_uio,rte_kni&#125;"</span><br><span class="line">      exit 1</span><br><span class="line">      ;;</span><br><span class="line">    "d")</span><br><span class="line">      DEVICE=$OPTARG</span><br><span class="line">      ;;</span><br><span class="line">    "r")</span><br><span class="line">      DRIVER=$OPTARG</span><br><span class="line">      ;;</span><br><span class="line">    *)</span><br><span class="line">    # Should not occur</span><br><span class="line">      echo "Unknown error while processing options"</span><br><span class="line">      ;;</span><br><span class="line">  esac</span><br><span class="line">done</span><br><span class="line"></span><br><span class="line">mkdir -p /mnt/huge</span><br><span class="line">mount -t hugetlbfs nodev /mnt/huge</span><br><span class="line">echo 64 &gt; /sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages</span><br><span class="line">ifconfig $DEVICE down</span><br><span class="line">modprobe uio</span><br><span class="line">insmod build/kmod/$DRIVER.ko</span><br><span class="line">./usertools/dpdk-devbind.py --bind=$DRIVER $DEVICE</span><br></pre></td></tr></table></figure>
+
+<p>反向脚本，恢复网卡和uio的绑定</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line"></span><br><span class="line">DEVICE="0000:81:00.1"</span><br><span class="line">DRIVER="alx"</span><br><span class="line"></span><br><span class="line">while getopts ":hd:r:" optname</span><br><span class="line">do</span><br><span class="line">  case "$optname" in</span><br><span class="line">    "h")</span><br><span class="line">      echo "   `basename $&#123;0&#125;`:usage:[-d device_name] [-r driver_name]"</span><br><span class="line">      echo "   where device_name can be one in: &#123;0000:81:00.1&#125;,driver_name can be one in: &#123;alx,iwlwifi&#125;"</span><br><span class="line">      exit 1</span><br><span class="line">      ;;</span><br><span class="line">    "d")</span><br><span class="line">      DEVICE=$OPTARG</span><br><span class="line">      ;;</span><br><span class="line">    "r")</span><br><span class="line">      DRIVER=$OPTARG</span><br><span class="line">      ;;</span><br><span class="line">    *)</span><br><span class="line">    # Should not occur</span><br><span class="line">      echo "Unknown error while processing options"</span><br><span class="line">      ;;</span><br><span class="line">  esac</span><br><span class="line">done</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">./usertools/dpdk-devbind.py --bind=$DRIVER $DEVICE</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="9-示例程序编译和运行"><a href="#9-示例程序编译和运行" class="headerlink" title="9.示例程序编译和运行"></a>9.示例程序编译和运行</h5><p>代码是examples/中的示例程序</p>
+<p>1）编译</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">make -C examples RTE_SDK=$(pwd) RTE_TARGET=build O=$(pwd)/build/examples</span><br><span class="line">	RTE_SDK	//指向DPDK安装文件夹</span><br><span class="line">	RTE_TARGET	//指向DPDK目标环境目录</span><br></pre></td></tr></table></figure>
+
+<p>2）进入helloworld的编译目录</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd build/examples/helloworld/build</span><br><span class="line">./helloworld</span><br></pre></td></tr></table></figure>
+
+<p>程序运行成功。</p>
+]]></content>
+      <categories>
+        <category>DPDK</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>DPDK</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>CentOS安装CMake3.10</title>
+    <url>/2020/04/06/CentOS%E5%AE%89%E8%A3%85CMake3.10/</url>
+    <content><![CDATA[<p>CentOS安装CMake的步骤.</p>
+<a id="more"></a>
+
+<p>1.获取安装包</p>
+<pre><code>wget https://cmake.org/files/v3.10.3/cmake-3.10.3.tar.gz
+tar -zxvf cmake-3.10.3.tar.gz
+cd cmake-3.10.3</code></pre><p>2.安装工具和库</p>
+<pre><code>yum install ncurses-devel perl </code></pre><p>3.编译安装</p>
+<pre><code>./configurature</code></pre><p>这里编译出错</p>
+<pre><code>/home/cmake-3.10.3/Bootstrap.cmk/cmake: /usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.20&apos; not found (required by /home/jxt/cmake-3.10.3/Bootstrap.cmk/cmake) 
+/home/cmake-3.10.3/Bootstrap.cmk/cmake:/usr/lib64/libstdc++.so.6: version `GLIBCXX_3.4.21&apos; not found (required by /home/jxt/cmake-3.10.3/Bootstrap.cmk/cmake)
+---------------------------------------------
+Error when bootstrapping CMake:
+Problem while running initial CMake
+---------------------------------------------</code></pre><p>原因：缺少GLIBCXX_3.4.20和GLIBCXX_3.4.21<br>解决方法：<br>核实版本问题</p>
+<pre><code>strings /usr/lib64/libstdc++.so.6 | grep GLIBCXX</code></pre><p>这里的确没有上述两个库，从刚安装的gcc中查找</p>
+<pre><code>strings /usr/local/lib64/libstdc++.so.6.0.21|grep GLIBCXX</code></pre><p>有新的libstdc++，把它拷贝到响应的地方，重新进行软链接即可。</p>
+<pre><code>cp /usr/local/lib64/libstdc++.so.6.0.21 /usr/lib64/
+cd /usr/lib64/
+rm -f libstdc++.so.6
+ln -s libstdc++.so.6.0.21 libstdc++.so.6
+ll libstdc*</code></pre><p>结果显示：</p>
+<pre><code>lrwxrwxrwx 1 root   root    19 Mar 30 23:34 libstdc++.so.6 -&gt; libstdc++.so.6.0.21
+-rwxr-xr-x 1 root   root    989840 Jun 19  2018 libstdc++.so.6.0.13
+-rwxr-xr-x 1 root   root   11169245 Mar 30 23:32 libstdc++.so.6.0.21</code></pre><p>然后重新编译安装即可</p>
+<pre><code>./configurature
+make
+make install</code></pre><p>4.修改目录名</p>
+<pre><code>mv cmake-3.10.3  cmake</code></pre><p>5.设置全局变量</p>
+<pre><code>vim /etc/profile</code></pre><p>在文件末尾追加两行代码：</p>
+<pre><code>PATH=/usr/local/cmake/bin:$PATH
+export PATH</code></pre><p>然后执行以下操作</p>
+<pre><code>source /etc/profile   //使修改生效 
+echo $PATH  //查看PATH值</code></pre><p>6.检查CMake安装</p>
+<pre><code>cmake --version</code></pre>]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>CMake</tag>
+        <tag>安装</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>CentOS源码升级gcc</title>
+    <url>/2020/04/06/CentOS%E6%BA%90%E7%A0%81%E5%8D%87%E7%BA%A7gcc/</url>
+    <content><![CDATA[<p>CentOS源码安装gcc以及gcc链接库的问题.</p>
+<a id="more"></a>
+
+<p>1.获取源码包</p>
+<pre><code>wget http://ftp.gnu.org/gnu/gcc/gcc-5.4.0/gcc-5.4.0.tar.gz
+tar -zxvf gcc-5.4.0.tar.gz
+cd gcc-5.4.0</code></pre><p>2.下载、配置、安装依赖项</p>
+<pre><code>./contrib/download_prerequisites</code></pre><p>3.配置编译参数，生成Makefile</p>
+<pre><code>cd ..
+mkdir build
+cd build
+../gcc-5.4.0/configure --enable-checking=release --enable-languages=c,c++ --disable-multilib</code></pre><p>4.编译安装</p>
+<pre><code>make -j4  #允许4个编译命令同时执行，加速编译过程
+make install</code></pre><p>5.重启生效</p>
+<pre><code>reboot
+（这里不需要重启，注销用户重新登录即可） </code></pre><p>关于gcc链接库的问题：</p>
+<pre><code>strings /usr/lib64/libstdc++.so.6 | grep GLIBCXX
+strings /usr/local/lib64/libstdc++.so.6.0.21|grep GLIBCXX
+cp /usr/local/lib64/libstdc++.so.6.0.21 /usr/lib64/
+cd /usr/lib64/
+rm -f libstdc++.so.6
+ln -s libstdc++.so.6.0.21 libstdc++.so.6
+ll libstdc*</code></pre><p>升级到gcc5.4.0后仍然出现问题：</p>
+<pre><code>error:unrecognized command line option &apos;std=c++14&apos;</code></pre><p>解决办法：指定CXX路径</p>
+<pre><code>cmake -DCMAKE_CXX_COMPILER=/usr/local/bin/g++</code></pre>]]></content>
+      <tags>
+        <tag>Linux</tag>
+        <tag>gcc</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>如何搭建自己的博客</title>
+    <url>/2020/04/06/blog/</url>
+    <content><![CDATA[<p>终于又把博客搭起来了，希望能坚持记一些东西。这里通过github pages + hexo搭建博客，并且我选择了简单大气的next主题，将步骤记录下来，方便以后修改。</p>
+<a id="more"></a>
+
+<h5 id="首先新建一个仓库，并且仓库名一定是-lt-github名-github-io-gt-。"><a href="#首先新建一个仓库，并且仓库名一定是-lt-github名-github-io-gt-。" class="headerlink" title="首先新建一个仓库，并且仓库名一定是&lt;github名.github.io&gt;。"></a>首先新建一个仓库，并且仓库名一定是&lt;github名.github.io&gt;。</h5><h5 id="配置SSH-keys"><a href="#配置SSH-keys" class="headerlink" title="配置SSH keys"></a>配置SSH keys</h5><ul>
+<li>在终端下输入命令，查看是否已配置过SSH key</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd ~/.ssh</span><br></pre></td></tr></table></figure>
+
+<p>如果没有提示，则已经配置过，跳过此步；否则如果提示“No such file or directory”，说明是第一次使用git，需要配置SSH key。</p>
+<ul>
+<li>生成新的SSH key：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ssh-keygen -t rsa -C "邮箱地址"</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>将SSH key添加到github</li>
+</ul>
+<p>打开本地刚生成的.ssh/id_rsa.pub，复制文件中的所有内容；进入github主页，在settings里选择SSH and GPG keys，点击New SSH key，将内容复制进key，title可以为空，点击Add SSH key即可。</p>
+<ul>
+<li>通过下面的命令测试是否添加成功</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ssh -T git@Github.com</span><br></pre></td></tr></table></figure>
+
+<p>出现“successfully authenticated”提示表示添加成功。</p>
+<h5 id="安装Hexo"><a href="#安装Hexo" class="headerlink" title="安装Hexo"></a>安装Hexo</h5><p>Hexo是一个快速、简洁的博客框架，使用Markdown解析文章，利用自己选择的主题生成静态网页。</p>
+<ol>
+<li>安装Node.js（这里通过homebrew安装）</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">brew -v	#检查是否安装homebrew</span><br><span class="line"><span class="meta">#</span><span class="bash">没有安装homebrew，执行下面的命令，否则跳过</span></span><br><span class="line">ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" </span><br><span class="line"><span class="meta">#</span><span class="bash">安装Node.js</span></span><br><span class="line">brew link node</span><br><span class="line">brew uninstall node</span><br><span class="line">brew install node</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>安装Hexo（使用npm安装）</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install -g hexo-cli</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>使用Hexo建站</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo init &lt;folder&gt;</span><br><span class="line">cd &lt;folder&gt;</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>Hexo测试</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>执行上面的命令，进入<a href="http://localhost:4000/即可查看个人站点。" target="_blank" rel="noopener">http://localhost:4000/即可查看个人站点。</a></p>
+<ol start="5">
+<li>将Hexo部署到Git上</li>
+</ol>
+<ul>
+<li>安装hexo-deployer-git</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install hexo-deployer-git --save</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>修改_config.yml文件中的配置：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">deploy:</span><br><span class="line">	type: git</span><br><span class="line">	repo: &lt;repository url&gt;</span><br><span class="line">	branch: master</span><br></pre></td></tr></table></figure>
+
+<p>注意：配置_config.yml时，在所有的冒号后面都要加一个空格，否则执行hexo就会报错。</p>
+<ul>
+<li>执行下面的命令，将Hexo部署到github pages上</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo clean</span><br><span class="line">hexo g</span><br><span class="line">hexo d</span><br></pre></td></tr></table></figure>
+
+<h5 id="更换Next主题"><a href="#更换Next主题" class="headerlink" title="更换Next主题"></a>更换Next主题</h5><ul>
+<li>在themes文件夹内新建一个文件夹next，将下载的next放在这里，修改站点根目录下的_config.yml内的theme，即可切换主题。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">theme: next</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>验证Next</li>
+</ul>
+<p>在站点根目录下，执行下面的命令：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo s</span><br></pre></td></tr></table></figure>
+
+<p>在localhost:4000下查看是否修改成功。</p>
+<ul>
+<li>部署到github pages上</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo clean</span><br><span class="line">hexo g</span><br><span class="line">hexo d</span><br></pre></td></tr></table></figure>
+
+<p>这里可以等所有的修改完成先使用hexo g部署，然后hexo s在本地检查，之后使用一次hexo d发布。</p>
+<h5 id="配置Next主题"><a href="#配置Next主题" class="headerlink" title="配置Next主题"></a>配置Next主题</h5><p>注意HEXO中有两份主要的配置文件，即_config.yml，一份位于站点根目录下，主要是Hexo本身的配置，另一份位于主题目录下，主要用于配置主题相关的选项。</p>
+<ol>
+<li>基本信息配置</li>
+</ol>
+<p>站点配置文件 -&gt; Site模块</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># Site</span><br><span class="line">title: 标题</span><br><span class="line">subtitle: 副标题</span><br><span class="line">description: 描述</span><br><span class="line">keywords: </span><br><span class="line">author: 作者</span><br><span class="line">language: zh-Hans（语言）</span><br><span class="line">timezone: &#39;&#39;（市区）</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>菜单设置</li>
+</ol>
+<p>主题配置文件 -&gt; Menu Settings</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">menu:</span><br><span class="line">  home: &#x2F; || home											首页</span><br><span class="line">  categories: &#x2F;categories&#x2F; || th			归档</span><br><span class="line">  tags: &#x2F;tags&#x2F; || tags								分类</span><br><span class="line">  archives: &#x2F;archives&#x2F; || archive			标签</span><br><span class="line">  about: &#x2F;about&#x2F; || user							关于</span><br><span class="line">  #schedule: &#x2F;schedule&#x2F; || calendar		日程表</span><br><span class="line">  #sitemap: &#x2F;sitemap.xml || sitemap		站点地图</span><br><span class="line">  #commonweal: &#x2F;404&#x2F; || heartbeat			公益404</span><br></pre></td></tr></table></figure>
+
+<p>需要哪个菜单取消注释即可。</p>
+<p>格式问题：如 categories: /categories/ || th</p>
+<p>/categories/表示标题，其格式可以在themes/next/languages/zh-Hans.yml中修改；</p>
+<p>th表示图标，可以在<a href="https://fontawesome.com/icons?from=io" target="_blank" rel="noopener">Font Awesome</a>中修改。</p>
+<ol start="3">
+<li>Next主题样式设置</li>
+</ol>
+<p>主题配置文件 -&gt; Scheme Settings</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># Schemes</span><br><span class="line">#scheme: Muse</span><br><span class="line">scheme: Mist</span><br><span class="line">#scheme: Pisces</span><br><span class="line">#scheme: Gemini</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>侧栏设置</li>
+</ol>
+<p>主题配置文件 -&gt; sidebar</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sidebar:</span><br><span class="line">  # Sidebar Position, available value: left | right (only for Pisces | Gemini).						&#x2F;&#x2F;侧栏位置</span><br><span class="line">  position: left	-靠左放置</span><br><span class="line">  #position: right	-靠右放置</span><br><span class="line"></span><br><span class="line">  # Sidebar Display, available value (only for Muse | Mist):	&#x2F;&#x2F;侧栏显示时机</span><br><span class="line">  #  - post    expand on posts automatically. Default.</span><br><span class="line">  #  - always  expand for all pages automatically</span><br><span class="line">  #  - hide    expand only when click on the sidebar toggle icon.</span><br><span class="line">  #  - remove  Totally remove sidebar including sidebar toggle.</span><br><span class="line">  #display: post	-默认行为</span><br><span class="line">  #display: always	-在所有页面中都显示</span><br><span class="line">  display: hide		-在所有页面中都隐藏</span><br><span class="line">  #display: remove	-安全移除</span><br><span class="line"></span><br><span class="line">  # Sidebar offset from top menubar in pixels (only for Pisces | Gemini).</span><br><span class="line">  offset: 12		&#x2F;&#x2F;文章间距</span><br><span class="line"></span><br><span class="line">  # Back to top in sidebar (only for Pisces | Gemini).</span><br><span class="line">  b2t: false		&#x2F;&#x2F;返回顶部按钮</span><br><span class="line"></span><br><span class="line">  # Scroll percent label in b2t button.</span><br><span class="line">  scrollpercent: false		&#x2F;&#x2F;返回顶部按钮的百分比</span><br><span class="line"></span><br><span class="line">  # Enable sidebar on narrow view (only for Muse | Mist).	&#x2F;&#x2F;窄视图中启动侧边栏</span><br><span class="line">  onmobile: false</span><br></pre></td></tr></table></figure>
+
+<ol start="5">
+<li>头像设置</li>
+</ol>
+<p>主题配置文件 -&gt; Sidebar Avatar</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># Sidebar Avatar</span><br><span class="line"># in theme directory(source&#x2F;images): &#x2F;images&#x2F;avatar.gif</span><br><span class="line"># in site  directory(source&#x2F;uploads): &#x2F;uploads&#x2F;avatar.gif</span><br><span class="line">avatar: &#x2F;images&#x2F;header.jpg	&#x2F;&#x2F;将图片命名为header.jpg，放入themes&#x2F;next&#x2F;source&#x2F;images目录下</span><br></pre></td></tr></table></figure>
+
+<ol start="6">
+<li>设置RSS</li>
+</ol>
+<ul>
+<li>安装hexo-generator-feed插件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install hexo-generator-feed --save</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>站点配置文件中的Extensions下添加</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> RSS订阅</span></span><br><span class="line">feed:</span><br><span class="line">  type: atom</span><br><span class="line">  path: atom.xml</span><br><span class="line">  limit: 20</span><br><span class="line">  hub:</span><br><span class="line">  content:</span><br><span class="line">  content_limit: 140</span><br><span class="line">  content_limit_delim: ' '</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>主题配置文件中设置rss</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rss: /atom.xml</span><br></pre></td></tr></table></figure>
+
+<ol start="7">
+<li>添加分类模块</li>
+</ol>
+<ul>
+<li>新建一个分类页面</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">hexo new page categories</span><br></pre></td></tr></table></figure>
+
+<p>在站点根目录下的source目录下会产生categories/index.md，打开index.md将title设置为title：分类</p>
+<ul>
+<li>打开主题配置文件，将menu下的categorices取消注释</li>
+<li>把文章归入分类只需在文章顶部添加categories字段即可</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">title: 文章标题</span><br><span class="line">categories: 分类名</span><br></pre></td></tr></table></figure>
+
+<ol start="8">
+<li>添加标签模块</li>
+</ol>
+<ul>
+<li>新建一个标签页面</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">hexo new page tags</span><br></pre></td></tr></table></figure>
+
+<p>在站点根目录下的source目录下会产生tags/index.md，打开index.md将title设置为title：标签</p>
+<ul>
+<li>打开主题配置文件，将menu下的tags取消注释</li>
+<li>把文章归入分类只需在文章顶部添加tags字段即可</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">title: 文章标题</span><br><span class="line">tags: </span><br><span class="line">	- 标签一</span><br><span class="line">	- 标签二</span><br></pre></td></tr></table></figure>
+
+<ol start="9">
+<li>添加关于模块</li>
+</ol>
+<ul>
+<li>新建一个关于页面</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">hexo new page about</span><br></pre></td></tr></table></figure>
+
+<p>在站点根目录下的source目录下会产生about/index.md，打开index.md即可编辑“关于”信息。</p>
+<ul>
+<li>打开主题配置文件，将menu下的about取消注释</li>
+</ul>
+<ol start="10">
+<li>添加搜索功能</li>
+</ol>
+<ul>
+<li>添加hexo-generator-searchdb插件</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">npm install hexo-generator-searchdb --save</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>打开站点配置文件，在Extensions下添加</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">search:</span><br><span class="line">	path: search.xml</span><br><span class="line">	field: post</span><br><span class="line">	format: html</span><br><span class="line">	limit: 10000</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>打开主题配置文件，将Local search下的enable设置为true</li>
+</ul>
+<ol start="11">
+<li>添加阅读全文按钮</li>
+</ol>
+<p>在文章中添加：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;!--more--&gt;</span><br></pre></td></tr></table></figure>
+
+<p>其他的修改可以参考<a href="http://theme-next.iissnan.com/theme-settings.html" target="_blank" rel="noopener">Next主题配置</a></p>
+<h5 id="开始第一篇文章"><a href="#开始第一篇文章" class="headerlink" title="开始第一篇文章"></a>开始第一篇文章</h5><ol>
+<li>在站点根目录下输入命令</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hexo new "title"	#title为文章标题</span><br></pre></td></tr></table></figure>
+
+<p>然后在source/_post文件夹下就会有名为title.md的文件，编辑title.md文件即可。</p>
+<ol start="2">
+<li>在Hexo中插入图片时，需要如下设置：</li>
+</ol>
+<ul>
+<li><p>将站点配置文件中的post_asset_folder选项设置为true</p>
+</li>
+<li><p>在站点根目录下输入如下命令安装插件</p>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">npm install hexo-asset-image --save</span><br></pre></td></tr></table></figure>
+
+<p>这样在hexo new title创建文章时会同时在source/_post目录下生成一个与title同名的文件夹，之后将图片放到该目录下，就可以在文章中引用。</p>
+<ol start="3">
+<li>模板设置</li>
+</ol>
+<p>修改/scaffolds/post.md的内容</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">title: &#123;&#123; title &#125;&#125;</span><br><span class="line">date: &#123;&#123; date &#125;&#125;</span><br><span class="line">tags: </span><br><span class="line">categories:</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>头部设置</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">title: Title</span><br><span class="line">date: YYYY-MM-DD HH:MM:SS</span><br><span class="line">tags: [tag1, tag2, ...]</span><br><span class="line">categories: category</span><br><span class="line">&lt;!--more--&gt;</span><br></pre></td></tr></table></figure>
+
+<p>将&lt;!–more–&gt;放在合适的位置，它前面的内容就会显示在首页上。</p>
+<ol start="5">
+<li>部署发布</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">hexo g -d</span><br></pre></td></tr></table></figure>
+
+<p>在使用hexo g部署之后，可以先使用hexo s运行本地站点，在浏览器里输入地址localhost:4000查看运行结果，然后再使用hexo d发布。</p>
+]]></content>
+      <tags>
+        <tag>blog</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>卸载了系统自带的Python该怎么办</title>
+    <url>/2020/04/06/%E5%8D%B8%E8%BD%BD%E4%BA%86%E7%B3%BB%E7%BB%9F%E8%87%AA%E5%B8%A6%E7%9A%84Python%E8%AF%A5%E6%80%8E%E4%B9%88%E5%8A%9E/</url>
+    <content><![CDATA[<p>关于comanche之前的编译错误，README文档里的测试环境有clang，于是安装clang，clang安装过程要求Python版本2.7及以上，服务器自带Python2.6.6，于是又开始升级Python。然后一路安装手贱删除了系统自带Python，由于Linux一些命令（比如yum）依赖Python，所以删掉Python，这些命令也没法执行，于是开始上网查找各种恢复Python的办法，解决方法如下.</p>
+<a id="more"></a>
+
+<p>1.卸载Python</p>
+<pre><code>rpm -qa|grep python|xargs rpm -e --allmatches --nodeps
+whereis python|xargs rm -fr</code></pre><p>2.卸载yum</p>
+<pre><code>rpm -qa|grep yum|xargs rpm -e --allmatches --nodeps
+rm -rf /etc/yum.repos.d/*
+whereis yum|xargs rm -fr</code></pre><p>3.安装Python<br>在任何一个镜像里找到系统对应版本的Python rpm包（服务器系统是CentOS 6.10，64位，使用的镜像是<a href="http://mirrors.163.com/centos/6.10/os/x86_64/Packages/" target="_blank" rel="noopener">http://mirrors.163.com/centos/6.10/os/x86_64/Packages/</a><br>下载以下包：</p>
+<pre><code>wget http://mirrors.163.com/centos/6.10/os/x86_64/Packages/python-2.6.6-66.el6_8.x86_64.rpm
+wget http://mirrors.163.com/centos/6.10/os/x86_64/Packages/python-iniparse-0.3.1-2.1.el6.noarch.rpm
+wget http://mirrors.163.com/centos/6.10/os/x86_64/Packages/python-pycurl-7.19.0-9.el6.x86_64.rpm
+wget http://mirrors.163.com/centos/6.10/os/x86_64/Packages/python-devel-2.6.6-66.el6_8.x86_64.rpm
+wget http://mirrors.163.com/centos/6.10/os/x86_64/Packages/python-libs-2.6.6-66.el6_8.x86_64.rpm
+wget http://mirrors.163.com/centos/6.10/os/x86_64/Packages/python-urlgrabber-3.9.1-11.el6.noarch.rpm
+wget http://mirrors.163.com/centos/6.10/os/x86_64/Packages/rpm-python-4.8.0-59.el6.x86_64.rpm</code></pre><p> 执行命令：</p>
+<pre><code>rpm -ivh python-*   rpm-python-*</code></pre><p> 4.安装yum<br> 下载以下包：</p>
+<pre><code>wget http://mirrors.163.com/centos/6.10/os/x86_64/Packages/yum-3.2.29-81.el6.centos.noarch.rpm
+wget http://mirrors.163.com/centos/6.10/os/x86_64/Packages/yum-metadata-parser-1.1.2-16.el6.x86_64.rpm
+wget http://mirrors.163.com/centos/6.10/os/x86_64/Packages/yum-plugin-fastestmirror-1.1.30-41.el6.noarch.rpm</code></pre><p>执行命令：</p>
+<pre><code>rpm -ivh yum-*</code></pre><p>5.测试</p>
+<pre><code>yum</code></pre>]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>Python</tag>
+        <tag>安装</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>论文Using RDMA Efficiently for Key-Value Services Sigcomm&#39;14</title>
+    <url>/2020/04/06/%E8%AE%BA%E6%96%87Using-RDMA-Efficiently-for-Key-Value-Services-Sigcomm-14/</url>
+    <content><![CDATA[<p>RDMA(Remote Direct Memory Access)：远程直接内存访问，为了解决网络传输中服务器端数据处理的延迟而产生的。它将数据直接从一台计算机的内存传输到另一台计算机，无需双方操作系统的介入，这允许高吞吐、低延迟的网络通信，尤其适合在大规模并行计算机集群中使用。RDMA通过网络把资料直接传入计算机的存储区，将数据从一个系统快速移动到远程系统存储器中，而不对操作系统造成任何影响，这样就不需要用到多少计算机的处理能力。它消除了外部存储器复制和上下文切换的开销，因而能解放内存带宽和 CPU周期用于改进应用系统性能。</p>
+<a id="more"></a>
+
+<p><strong>背景</strong></p>
+<ul>
+<li><p><em>传统TCP/IP通信模式</em>：数据通过用户空间发送到远程机器的用户空间。</p>
+<p>发送方将数据从用户空间Buffer复制到内核空间的Socket Buffer中；然后kernel空间中添加一系列网络协议的数据包头，进行数据封装；数据被PUSH到NIC网卡中的Buffer进行网络传输。</p>
+<p>接收方接收到远程机器发送的数据包后，将数据包从NIC buffer中复制数据到Socket Buffer；然后经过一系列的多层网络协议进行数据包的解析工作；解析后的数据被复制到相应位置的用户应用空间Buffer；再进行系统上下文切换，用户应用程序被调用。</p>
+</li>
+<li><p><em>通信网络定义</em>：计算机网络通信中最重要的两个衡量指标主要是高带宽和低延迟，通信延迟主要是指：处理延迟和网络传输延迟。处理延迟开销是消息在发送和接收阶段的处理时间，网络传输延迟是消息在发送和接收方的网络传输延迟。如果通信状况很好的情况下，网络基本上可以达到高带宽和低延迟。</p>
+</li>
+<li><p><em>当今网络现状</em>：现在的消息通信主要分为两类消息，一类是large messages，这类消息通信中网络传输延迟占整个通信中的主导地位；另一类是small messages，这类消息中处理开销占总开销的主要部分。现实计算机网络中的通信场景中，主要以发送小消息为主。处理开销主要指的是buffer管理、在不同内存空间中消息复制、消息发送完成后的系统中断。</p>
+</li>
+<li><p><em>传统TCP/IP存在的问题</em>：I/O瓶颈问题，即与网络I/O相关的主机处理的开销，包括数据移动操作和复制操作开销，主要是因为TCP/IP通过内核发送消息，数据移动和复制多，难以支持新的网络协议和新的消息通信协议以及发送和接收窗口。</p>
+</li>
+</ul>
+<p><strong>相关工作</strong></p>
+<p>TCP Offloading Engine、User-Net Networking、Virtual Interface Architecture(VIA)、Remote Direct Memory Access(RDMA)</p>
+<ul>
+<li><p>TCP Offloading Engine(TOE)：将封装多层网络协议的工作转移到网卡上，需要特定网络接口-网卡支持这种Offloading操作。常见于高速以太网接口上，如吉比特以太网(GbE)或10吉比特以太网(10GbE)。</p>
+</li>
+<li><p>User-Net Networking(U-Net)：将协议处理部分移动到用户空间处理，避免用户空间将数据移动和复制到内核空间的开销。移动整个协议栈到用户空间中，并从数据通信路径中彻底删除内核，带来了高性能的提升和高灵活性的提升。传统网络内核控制整个网络通信，U-Net应用程序通过MUX直接访问网络，而不需要将数据拷贝到内核中。</p>
+</li>
+</ul>
+<p><strong>RDMA详解</strong></p>
+<p>RDMA的三个特性：低延迟、低CPU开销、高带宽</p>
+<p>在用户空间虚拟内存与RNIC网卡直接进行数据传输不涉及到系统内核，没有额外的数据移动和复制。</p>
+<ul>
+<li><p><em>RDMA基本概念</em></p>
+<p><strong><em>两种基本操作</em></strong>：</p>
+<p>1.Memory verbs：RDMA read、write、atomic，这些操作指定远程地址进行操作并且绕过接收者的CPU。</p>
+<p>2.Messaging vers：包括RDMA send、receive，这些动作设计响应者的CPU，发送的数据被写入到由响应者的CPU先前发布的receive指定的地址。</p>
+<p><strong><em>RDMA传输</em></strong>分为可靠的和不可靠的，可连接的和不连接的，无连接的数据报不支持memory verbs。</p>
+</li>
+<li><p>RDMA三种不同的硬件实现</p>
+<ul>
+<li><p>Infiniband：支持RDMA的新一代网络协议，专为RDMA设计的网络，从硬件级别保证可靠传输，需要支持该技术的NIC和交换机。</p>
+</li>
+<li><p>RoCE(RDMA over Converged Ethernet)：在以太网上执行RDMA的网络协议，较低的网络标头是以太网标头，较高的网络标头是InfiniBand标头，可在标准以太网基础设施(交换机)上使用RDMA，只有网卡是特殊的，支持RoCE。RoCEv1是基于以太网链路层实现的RDMA协议，而RoCEv2是以太网TCP/IP协议中UDP层实现。</p>
+</li>
+<li><p>iWARP(Internet Wide Area RDMA Protocol)：允许在TCP上执行RDMA的网络协议，IB和RoCE中存在IDE功能在iWARP中不受支持。支持标准以太网基础设施(交换机)上使用RDMA，只有网卡是特殊的，支持iWARP。</p>
+</li>
+</ul>
+</li>
+<li><p>RDMA工作过程</p>
+<ul>
+<li>当一个应用执行RDM读或写请求时，不执行任何数据复制，在不需要任何内核内存参与的条件下，RDMA请求从运行在用户空间中的应用中发送到本地NIC。</li>
+<li>NIC读取缓冲的内容，并通过网络传送到远程NIC。</li>
+<li>在网络中传输的RDMA信息包含目标虚拟地址、内存钥匙和数据不本身，请求可完全在用户空间中处理(通过轮询用户级完成排列)，或者在应用一直睡眠到请求完成时的情况下通过系统中断处理。操作使应用可以从一个远程应用的内存中读数据或向这个内存写数据。</li>
+<li>目标NIC确认内存钥匙，直接将数据写入应用缓存中，用于操作的远程虚拟内存地址包含在RDMA信息中。</li>
+</ul>
+</li>
+<li><p>RDMA操作细节</p>
+<ul>
+<li><p>RDMA通信的两端会各自维护Queue Pairs(QP)，每对QP由Send Queue(SQ)和Receive Queue(RQ)构成，队列中管理各种类型的消息。QP会被映射到应用的虚拟地址空间，使得应用直接通过它访问RNIC网卡。QP会绑定另外一个队列Complete Queue(CQ)，CQ用来告知用户WQ上的消息已经被处理完。</p>
+</li>
+<li><p>RDMA提供一套软件传输接口，方便用户创建传输请求Work Request(WR)，WR中描述了应用希望传输到对方的消息内容，WR通知QP中的某个队列Work Queue(WQ)，在WQ中用户的WR被转化成Work Queue Element(WQE)的格式，等待RNIC的一步调度解析，并从WQE指向的Buffer中拿到真正的消息发送给对方。</p>
+</li>
+<li><p>RDMA单边操作——RDMA READ</p>
+<p><strong><em>单边操作只需要本端明确信息的源和目的地址，远端能应用不必感知此次通信，数据的读写都通过RDMA在RNIC与应用Buffer之间完成，再由远端RNIC封装成消息返回到本端。</em></strong></p>
+<ul>
+<li>单边操作流程<ul>
+<li>A、B建立连接，QP创建并初始化。</li>
+<li>数据存在A的buffer地址VA（内存区域）中，注意VA应提前注册到A的RNIC，并拿到返回的local key，相当于RDMA操作这块buffer的权限。</li>
+<li>A把数据地址VA，key封装到专用的报文传送到B，这相当于A把数据buffer的操作权交给了B。同时A在它的WQ中注册进一个WR，以用于接收数据传输的B返回的状态。</li>
+<li>B在收到A送过来的数据VA和R_key后，RNIC会把它们连同自身存储地址VB封装到RDMA READ请求，将这个消息请求发送给A，这个过程A、B两端不需要任何软件参与，就可以将A的数据存储到B的VB虚拟地址。</li>
+<li>B在存储完成后，会向A返回整个数据传输的状态信息。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>RDMA单边操作——RDMA WRITE</p>
+<ul>
+<li><p>首先A、B建立连接，QP已经创建并且初始化。</p>
+</li>
+<li><p>数据remote目标存储buffer地址VB，注意VB应该提前注册到B的RNIC(并且它是一个Memory Region)，并拿到返回的local key，相当于RDMA操作这块buffer的权限。</p>
+</li>
+<li><p>B把数据地址VB，key封装到专用的报文传送到A，这相当于B把数据buffer的操作权交给了A。同时B在它的WQ中注册进一个WR，以用于接收数据传输的A返回的状态。</p>
+</li>
+<li><p>A在收到B送过来的数据VB和R_key后，RNIC会把它们连同自身发送地址VA封装到RDMA WRITE请求，这个过程A、B两端不需要任何软件参与，就可以将A的数据发送到B的VB虚拟地址。</p>
+</li>
+<li><p>A在发送数据完成后，会向B返回整个数据传输的状态信息。</p>
+<p><strong><em>单边操作传输方式是RDMA与传统网络传输的最大不同，只需提供直接访问远程的虚拟地址，无须远程应用的参与其中，这种方式适用于批量数据传输。</em></strong></p>
+</li>
+</ul>
+</li>
+<li><p>RDMA双边操作——RDMA SEND/RECEIVE</p>
+<p><strong><em>RDMA中SEND/RECEIVE是双边操作，即必须要远端的应用感知参与才能完成收发。在实际中，SEND/RECEIVE多用于连接控制类报文，而数据报文多是通过READ/WRITE来完成的。</em></strong><br>对于双边操作为例，主机A向主机B(下面简称A、B)发送数据的流程如下：</p>
+<ul>
+<li><p>首先，A和B都要创建并初始化好各自的QP，CQ</p>
+</li>
+<li><p>A和B分别向自己的WQ中注册WQE，对于A，WQ=SQ，WQE描述指向一个等到被发送的数据；对于B，WQ=RQ，WQE描述指向一块用于存储数据的buffer。</p>
+</li>
+<li><p>A的RNIC异步调度轮到A的WQE，解析到这是一个SEND消息，从buffer中直接向B发出数据。数据流到达B的RNIC后，B的WQE被消耗，并把数据直接存储到WQE指向的存储位置。</p>
+</li>
+<li><p>AB通信完成后，A的CQ中会产生一个完成消息CQE表示发送完成。与此同时，B的CQ中也会产生一个完成消息表示接收完成。每个WQ中WQE的处理完成都会产生一个CQE。</p>
+<p><strong><em>双边操作与传统网络的底层Buffer Pool类似，收发双方的参与过程并无差别，区别在零拷贝、Kernel Bypass，实际上对于RDMA，这是一种复杂的消息传输模式，多用于传输短的控制消息。</em></strong></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>论文</category>
+      </categories>
+      <tags>
+        <tag>论文</tag>
+        <tag>RDMA</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>论文Architecting to Achieve a Billion Requests Per second Throughput on a Single Key-Value Store Server Platform,ISCA&#39;2015</title>
+    <url>/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/</url>
+    <content><![CDATA[<h5 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h5><ol>
+<li><p>分布式键值存储例如memcached广泛用于数据中心，比如Facebook、Twitter、Amazon和LinkedIn等，提供数据服务或缓存服务。</p>
+<a id="more"></a>
+</li>
+<li><p>传统的KVS瓶颈：使用操作系统内核网络协议栈、并发控制的重量级锁处理、昂贵的内存管理。</p>
+</li>
+<li><p>现有的研究：</p>
+<ol>
+<li>关注于硬件：基于FPGA的设计、其他非FPGA的建议</li>
+<li>关注于软件：优化网络处理、并发控制、k-v处理、内存管理，以充分利用商用CPU和网卡的性能，例如：MICA实现了77 million requests per second(MRPS)(7.7千万请求每秒)</li>
+</ol>
+</li>
+<li><p>关于KVS软件优化的几点思考：</p>
+<ol>
+<li>软件优化是否能充分利用现代硬件平台的性能；</li>
+<li>对于提高性能而言，哪些软件优化是必要的；</li>
+<li>对未来的平台架构有什么影响。</li>
+</ol>
+</li>
+</ol>
+<h5 id="现代平台和KVS设计空间"><a href="#现代平台和KVS设计空间" class="headerlink" title="现代平台和KVS设计空间"></a>现代平台和KVS设计空间</h5><ol>
+<li><p>现在的平台：</p>
+<ol>
+<li><p>CPU核数和末级缓存(LLC)大小不断提高</p>
+<p>eg：Intel Xeon(18 cores, 45MBs LLC)</p>
+</li>
+<li><p>网卡：延迟和带宽的提高、多队列、RSS(receive-size scaling)、flow-steering</p>
+</li>
+<li><p>处理器支持wauDCA(write-allocate-write-update-capable Direct Cache Access)：使传统或RDMA网卡能直接把数据包放到处理器LLC中，CPU无需从主存中拿数据包，从而控制缓存争用，如Intel DDIO(Intel Data Direct I/O)：</p>
+<p><img src="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/NIC.png" alt></p>
+</li>
+<li><p>操作系统网络协议栈——&gt;用户态网络I/O，如包处理I/O引擎PacketShader和DPDK</p>
+</li>
+</ol>
+</li>
+</ol>
+<ol start="2">
+<li><p>KVS设计</p>
+<ol>
+<li>memcached：原始的设计</li>
+<li>类memcached的KVS：MemC3、Pilaf、MICA、FaRM-KV、HERD，分别对KVS的不同部分进行了优化。</li>
+<li>KVS设计的四个维度<ol>
+<li>网络栈：POSIX socket I/O ——&gt; DPDK、RDMA drivers</li>
+<li>并发控制：互斥 ——&gt; 基于版本控制的乐观锁</li>
+<li>key-value处理：索引：链式哈希 ——&gt; 有损索引、cuckoo hashing、hopscotch hashing；替换策略：LRU列表 ——&gt; CLOCK、其他类LRU的策略</li>
+<li>内存管理：自定义内存管理(避免malloc的开销、使用大页内存减少TLB、促进替换策略的实施)，比SLAB、日志结构(循环日志)</li>
+</ol>
+</li>
+</ol>
+<img src="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/KVS design.png">
+
+
+
+</li>
+</ol>
+<h5 id="本论文实验-模拟"><a href="#本论文实验-模拟" class="headerlink" title="本论文实验(模拟)"></a>本论文实验(模拟)</h5><ol>
+<li><p>KVS实现</p>
+<img src="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/experimental KVS.png">
+</li>
+<li><p>工作负载：YCSB</p>
+<p>工作负载的几个方面：</p>
+<p>​    包大小：注意小数据包</p>
+<p>​    key的分布：uniform和skew(zipf:skewness=0.99)两种</p>
+<p>​    read-intensiveness：95%GET和50% GET</p>
+</li>
+<li><p>实验平台：</p>
+<p><u>数据收集和性能分析：</u></p>
+<p>​    Systemtap2.4：应用层、系统层、操作系统层分析</p>
+<p>​    Intel VTune：收集数据和硬件层性能分析</p>
+<p>​    Wats-Up-Pro：measure the total power supplied to the server from a wall socket </p>
+<p>​    National Instruments DAQ-9174：measure the power of the two processors and one of the PCIe NICs </p>
+</li>
+</ol>
+<h5 id="论文中KVS-server关注的几点内容-模拟结论"><a href="#论文中KVS-server关注的几点内容-模拟结论" class="headerlink" title="论文中KVS server关注的几点内容(模拟结论)"></a>论文中KVS server关注的几点内容(模拟结论)</h5><ol>
+<li><p>结构的平衡和系统优化：计算、存储和网络资源的平衡：</p>
+<p>CPU cores : 网络端口(万兆) = 2 ：1</p>
+<img src="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/CoresAndPorts.png" style="zoom:60">
+</li>
+<li><p>KV处理、并发控制、网络处理和内存管理多个方面需同时优化，单个方面优化并不能达到很好的效果。</p>
+</li>
+<li><p>预取降低缓存丢失率。</p>
+</li>
+<li><p>针对倾斜的工作负载，关注每核的行为。</p>
+</li>
+<li><p>满足延迟服务级别协议的同时，实现高吞吐量。</p>
+</li>
+<li><p>关于能耗的考虑，与FPGA做对比。</p>
+</li>
+</ol>
+<h5 id="十亿级RPS的KVS服务器实现-系统实现和评测"><a href="#十亿级RPS的KVS服务器实现-系统实现和评测" class="headerlink" title="十亿级RPS的KVS服务器实现(系统实现和评测)"></a>十亿级RPS的KVS服务器实现(系统实现和评测)</h5><ol>
+<li>平台架构</li>
+</ol>
+<img src="/2020/04/06/%E8%AE%BA%E6%96%87Billion-Requests-Per-second-Throughput/平台架构.png">
+
+<p>具体的硬件配置：计算、存储和网络之间的平衡</p>
+<p><strong>计算：</strong>涉及到ROB(reorder buffer)大小和issue width….最终选择带有64ROB的3-issue OOO core.</p>
+<p><strong>网络和I/O子系统：</strong>根据CPU核数确定网络带宽，根据网络带宽确定I/O带宽(PCIe)；片上集成网卡应用于KVS。</p>
+<p><strong>内存子系统和缓存层次结构：</strong> six memory controllers with single-channel DDR4-2400 for a total of 118 GB/s aggregated memory bandwidth </p>
+<ol start="2">
+<li>性能评测：(uniform data) 4-socket：1.2 billion RPS(BRPS)</li>
+</ol>
+<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><p>Full-stack insight：包括软件和硬件两方面的考虑和优化。</p>
+<p>优化结果不仅包括性能，还有系统的能耗。</p>
+<p>未来KVS设计的四个维度。</p>
+]]></content>
+      <categories>
+        <category>论文</category>
+      </categories>
+      <tags>
+        <tag>论文</tag>
+      </tags>
+  </entry>
+</search>
